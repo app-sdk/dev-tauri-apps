@@ -6,6 +6,18 @@ on:
       id:
         type: number
         required: true
+      s3-key:
+        type: string
+        required: true
+      s3-bucket:
+        type: string
+        default: ""
+      s3-region:
+        type: string
+        default: ""
+      s3-endpoint:
+        type: string
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }} ${{ github.ref_name }}/${{ inputs.id }}
@@ -15,4 +27,21 @@ jobs:
     name: "${{ github.workflow }} #${{ inputs.id }}"
     runs-on: ubuntu-latest
     steps:
+      - uses: levibostian/action-hide-sensitive-inputs@v1
+        with:
+          exclude_inputs: id
+      - uses: fregante/setup-git-user@v2
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+          node-version-file: .nvmrc
+      - run: pnpm install
+      - run: node publish.js
+        env:
+          S3_KEY: ${{ inputs.s3-key }}
+          S3_BUCKET: ${{ inputs.s3-bucket }}
+          S3_REGION: ${{ inputs.s3-region }}
+          S3_ENDPOINT: ${{ inputs.s3-endpoint }}
