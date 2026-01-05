@@ -3,20 +3,16 @@ name: Publish
 on:
   workflow_dispatch:
     inputs:
-      env:
-        type: choice
-        options: [development, production]
-        required: true
       id:
         type: number
         required: true
 
 concurrency:
-  group: ${{ github.workflow }} ${{ inputs.env }}-${{ inputs.id }}
+  group: ${{ github.workflow }} ${{ github.ref_name }}/${{ inputs.id }}
 
 jobs:
   publish:
-    name: ${{ github.workflow }} ${{ inputs.env }}-${{ inputs.id }}
+    name: "${{ github.workflow }} #${{ inputs.id }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
