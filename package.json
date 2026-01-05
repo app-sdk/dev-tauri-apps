@@ -1,0 +1,14 @@
+{
+  "name": "apps",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format": "prettier --log-level warn --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.7.4",
+    "prettier-plugin-packagejson": "^2.5.20"
+  },
+  "packageManager": "pnpm@10.27.0"
+}
