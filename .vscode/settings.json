@@ -5,8 +5,8 @@
   "files.trimFinalNewlines": true,
   "files.insertFinalNewline": true,
   "files.exclude": {
-    "pnpm-lock.yaml": true,
     ".nvmrc": true,
+    "**/pnpm-lock.yaml": true,
     "**/node_modules": true
   }
 }

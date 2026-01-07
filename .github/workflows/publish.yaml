@@ -36,20 +36,12 @@ jobs:
       - uses: levibostian/action-hide-sensitive-inputs@v1
         with:
           exclude_inputs: app-id
-      - uses: actions/checkout@v6
-      - uses: fregante/setup-git-user@v2
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v6
+      - uses: app-sdk/setup-action@main
         with:
-          cache: pnpm
-          registry-url: https://registry.npmjs.org
-          node-version-file: .nvmrc
-      - run: pnpm install
-      - run: node setup-app.js
-        env:
-          S3_KEY: ${{ inputs.s3-key }}
-          S3_BUCKET: ${{ inputs.s3-bucket }}
-          S3_REGION: ${{ inputs.s3-region }}
-          S3_ENDPOINT: ${{ inputs.s3-endpoint }}
-          S3_ACCESS_KEY_ID: ${{ inputs.s3-access-key-id }}
-          S3_SECRET_ACCESS_KEY: ${{ inputs.s3-secret-access-key }}
+          s3-key: ${{ inputs.s3-key }}
+          s3-bucket: ${{ inputs.s3-bucket }}
+          s3-region: ${{ inputs.s3-region }}
+          s3-endpoint: ${{ inputs.s3-endpoint }}
+          s3-access-key-id: ${{ inputs.s3-access-key-id }}
+          s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
+          s3-force-path-style: true
