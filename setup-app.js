@@ -13,9 +13,7 @@ const s3Client = new S3Client({
   },
   region: process.env.S3_REGION,
   endpoint: process.env.S3_ENDPOINT,
-  forcePathStyle:
-    process.env.S3_FORCE_PATH_STYLE === "1" ||
-    process.env.S3_FORCE_PATH_STYLE === "true",
+  forcePathStyle: true,
 });
 
 const s3Response = await s3Client.send(
