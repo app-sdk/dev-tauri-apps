@@ -36,7 +36,8 @@ jobs:
       - uses: levibostian/action-hide-sensitive-inputs@v1
         with:
           exclude_inputs: app-id
-      - uses: app-sdk/setup-action@main
+      - id: setup
+        uses: app-sdk/setup-action@main
         with:
           s3-key: ${{ inputs.s3-key }}
           s3-bucket: ${{ inputs.s3-bucket }}
@@ -45,3 +46,11 @@ jobs:
           s3-access-key-id: ${{ inputs.s3-access-key-id }}
           s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
           s3-force-path-style: true
+      - if: steps.setup.outputs.package-manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ steps.setup.outputs.pnpm-version }}
+      - uses: actions/setup-node@v4
+        with:
+          cache: ${{ steps.setup.outputs.package-manager }}
+          node-version: ${{ steps.setup.outputs.node-version }}
