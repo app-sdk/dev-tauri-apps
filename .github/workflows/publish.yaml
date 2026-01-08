@@ -50,7 +50,25 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: ${{ steps.setup.outputs.pnpm-version }}
-      - uses: actions/setup-node@v4
+      - if: steps.setup.outputs.package-manager != 'bun'
+        uses: actions/setup-node@v6
         with:
-          cache: ${{ steps.setup.outputs.package-manager }}
           node-version: ${{ steps.setup.outputs.node-version }}
+          cache: ${{ steps.setup.outputs.package-manager }}
+      - if: steps.setup.outputs.package-manager == 'bun'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ steps.setup.outputs.bun-version }}
+      - if: steps.setup.outputs.package-manager == 'bun'
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.setup.outputs.node-version }}
+          package-manager-cache: false
+      - run: ${{ steps.setup.outputs.install-command }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ inputs.app-id }}
+          workspaces: src-tauri
