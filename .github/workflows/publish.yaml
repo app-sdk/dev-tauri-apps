@@ -26,12 +26,17 @@ on:
         required: true
 
 concurrency:
-  group: publish/${{ inputs.app-id }}
+  group: ${{ github.workflow }} ${{ inputs.app-id }}
 
 jobs:
   publish:
-    name: "${{ github.workflow }} #${{ inputs.app-id }}"
+    strategy:
+      matrix:
+        platform: [macos-latest, windows-latest]
+    name: ${{ github.workflow }} ${{ inputs.app-id }}/${{ matrix.platform }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: levibostian/action-hide-sensitive-inputs@v1
         with:
@@ -72,3 +77,49 @@ jobs:
         with:
           shared-key: ${{ inputs.app-id }}
           workspaces: src-tauri
+      - if: runner.os == 'macOS'
+        id: prepare-apple-signing-identity
+        name: Prepare Apple signing identity
+        run: |
+          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p github-actions build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p github-actions build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k github-actions build.keychain
+          rm certificate.p12
+          APPLE_SIGNING_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
+          APPLE_SIGNING_IDENTITY=$(echo "$APPLE_SIGNING_INFO" | awk -F'"' '{print $2}')
+          echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY" >> $GITHUB_OUTPUT
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: Invoke-WebRequest -Uri "https://github.com/Levminer/trusted-signing-cli/releases/download/0.8.0/trusted-signing-cli.exe" -OutFile "$env:windir\trusted-signing-cli.exe"
+      - uses: tauri-apps/tauri-action@v0
+        with:
+          args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }}
+          tauriScript: ${{ steps.setup.outputs.exec-command }} tauri
+          tagName: tauri-${{ inputs.app-id }}@__VERSION__
+          releaseName: tauri-${{ inputs.app-id }}@__VERSION__
+          releaseBody: |
+            **App ID**: `${{ inputs.app-id }}`
+            **App Version**: `__VERSION__`
+          includeUpdaterJson: false
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ vars.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_SIGNING_IDENTITY: ${{ steps.prepare-apple-signing-identity.outputs.APPLE_SIGNING_IDENTITY }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - shell: bash
+        run: rm -rf src-tauri/target${{ runner.os == 'macOS' && '/universal-apple-darwin/' || '/' }}release/bundle
