@@ -48,7 +48,15 @@ jobs:
           s3-access-key-id: ${{ inputs.s3-access-key-id }}
           s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
           s3-force-path-style: true
-      - run: gh release delete tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }} --repo ${{ github.repository }} --cleanup-tag --yes
+      - run: |
+          if ! output=$(gh release delete tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }} --repo ${{ github.repository }} --cleanup-tag --yes 2>&1); then
+            if echo "$output" | grep -q "release not found"; then
+              exit 0
+            else
+              echo "$output" >&2
+              exit 1
+            fi
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
