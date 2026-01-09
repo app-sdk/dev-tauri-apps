@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   prepare:
-    name: tauri-${{ inputs.app-id }}@$action-latest
+    name: tauri-${{ inputs.app-id }}@github-latest
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -52,6 +52,7 @@ jobs:
         with:
           tag: tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          deleteOnlyFromDrafts: false
   publish:
     strategy:
       matrix:
