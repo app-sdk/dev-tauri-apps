@@ -106,8 +106,11 @@ jobs:
           targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
       - uses: swatinem/rust-cache@v2
         with:
-          shared-key: ${{ inputs.app-id }}-tauri
           workspaces: src-tauri
+          shared-key: ${{ inputs.app-id }}-tauri
+          cache-workspace-crates: true
+          cache-all-crates: true
+          add-job-id-key: false
       - if: runner.os == 'macOS'
         id: prepare-apple-signing-identity
         name: Prepare Apple signing identity
