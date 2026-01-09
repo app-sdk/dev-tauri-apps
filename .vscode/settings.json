@@ -3,10 +3,5 @@
   "editor.formatOnSave": true,
   "files.trimTrailingWhitespace": true,
   "files.trimFinalNewlines": true,
-  "files.insertFinalNewline": true,
-  "files.exclude": {
-    ".nvmrc": true,
-    "**/pnpm-lock.yaml": true,
-    "**/node_modules": true
-  }
+  "files.insertFinalNewline": true
 }
