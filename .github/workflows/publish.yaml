@@ -29,12 +29,36 @@ concurrency:
   group: ${{ github.workflow }} ${{ inputs.app-id }}
 
 jobs:
+  prepare:
+    name: tauri-${{ inputs.app-id }}@$action-latest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: levibostian/action-hide-sensitive-inputs@v1
+        with:
+          exclude_inputs: app-id
+      - id: setup
+        uses: app-sdk/setup-action@main
+        with:
+          s3-key: ${{ inputs.s3-key }}
+          s3-bucket: ${{ inputs.s3-bucket }}
+          s3-region: ${{ inputs.s3-region }}
+          s3-endpoint: ${{ inputs.s3-endpoint }}
+          s3-access-key-id: ${{ inputs.s3-access-key-id }}
+          s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
+          s3-force-path-style: true
+      - uses: andreaswilli/delete-release-assets-action@v4.0.0
+        with:
+          tag: tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
   publish:
     strategy:
       matrix:
         platform: [macos-latest, windows-latest]
     name: tauri-${{ inputs.app-id }}@${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
+    needs: [prepare]
     permissions:
       contents: write
     steps:
@@ -99,10 +123,6 @@ jobs:
       - if: runner.os == 'Windows'
         shell: pwsh
         run: Invoke-WebRequest -Uri "https://github.com/Levminer/trusted-signing-cli/releases/download/0.8.0/trusted-signing-cli.exe" -OutFile "$env:windir\trusted-signing-cli.exe"
-      - uses: andreaswilli/delete-release-assets-action@v4.0.0
-        with:
-          tag: tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: tauri-apps/tauri-action@v0
         with:
           args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }}
