@@ -106,7 +106,7 @@ jobs:
           targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
       - uses: swatinem/rust-cache@v2
         with:
-          shared-key: ${{ inputs.app-id }}
+          shared-key: ${{ inputs.app-id }}-tauri
           workspaces: src-tauri
       - if: runner.os == 'macOS'
         id: prepare-apple-signing-identity
@@ -136,9 +136,7 @@ jobs:
           tauriScript: ${{ steps.setup.outputs.exec-command }} tauri
           tagName: tauri-${{ inputs.app-id }}@__VERSION__
           releaseName: "${{ steps.setup.outputs.app-name || 'tauri-${{ inputs.app-id }}' }} __VERSION__"
-          releaseBody: |
-            **ID**: `${{ inputs.app-id }}`
-            **Version**: `__VERSION__`
+          releaseBody: "**ID**: `${{ inputs.app-id }}`"
           releaseCommitish: ${{ github.sha }}
           includeUpdaterJson: false
         env:
