@@ -48,11 +48,9 @@ jobs:
           s3-access-key-id: ${{ inputs.s3-access-key-id }}
           s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
           s3-force-path-style: true
-      - uses: andreaswilli/delete-release-assets-action@v4.0.0
-        with:
-          tag: tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          deleteOnlyFromDrafts: false
+      - run: gh release delete tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }} --cleanup-tag --yes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
     strategy:
       matrix:
@@ -129,7 +127,7 @@ jobs:
           args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }}
           tauriScript: ${{ steps.setup.outputs.exec-command }} tauri
           tagName: tauri-${{ inputs.app-id }}@__VERSION__
-          releaseName: "${{ steps.setup.outputs.app-name || 'tauri-${{ inputs.app-id }}' }}@__VERSION__"
+          releaseName: "${{ steps.setup.outputs.app-name || 'tauri-${{ inputs.app-id }}' }} __VERSION__"
           releaseBody: |
             **ID**: `${{ inputs.app-id }}`
             **Version**: `__VERSION__`
