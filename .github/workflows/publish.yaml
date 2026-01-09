@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         platform: [macos-latest, windows-latest]
-    name: ${{ github.workflow }} ${{ inputs.app-id }}/${{ matrix.platform }}
+    name: tauri-${{ inputs.app-id }}@${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
@@ -91,6 +91,7 @@ jobs:
           rm certificate.p12
           APPLE_SIGNING_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
           APPLE_SIGNING_IDENTITY=$(echo "$APPLE_SIGNING_INFO" | awk -F'"' '{print $2}')
+          echo "::add-mask::$APPLE_SIGNING_IDENTITY"
           echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY" >> $GITHUB_OUTPUT
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -98,6 +99,10 @@ jobs:
       - if: runner.os == 'Windows'
         shell: pwsh
         run: Invoke-WebRequest -Uri "https://github.com/Levminer/trusted-signing-cli/releases/download/0.8.0/trusted-signing-cli.exe" -OutFile "$env:windir\trusted-signing-cli.exe"
+      - uses: andreaswilli/delete-release-assets-action@v4.0.0
+        with:
+          tag: tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: tauri-apps/tauri-action@v0
         with:
           args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }}
@@ -105,8 +110,8 @@ jobs:
           tagName: tauri-${{ inputs.app-id }}@__VERSION__
           releaseName: tauri-${{ inputs.app-id }}@__VERSION__
           releaseBody: |
-            **App ID**: `${{ inputs.app-id }}`
-            **App Version**: `__VERSION__`
+            **ID**: `${{ inputs.app-id }}`
+            **Version**: `__VERSION__`
           releaseCommitish: ${{ github.sha }}
           includeUpdaterJson: false
         env:
@@ -114,12 +119,12 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_ID: ${{ vars.APPLE_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_SIGNING_IDENTITY: ${{ steps.prepare-apple-signing-identity.outputs.APPLE_SIGNING_IDENTITY }}
-          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - shell: bash
