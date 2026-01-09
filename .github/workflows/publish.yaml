@@ -48,7 +48,7 @@ jobs:
           s3-access-key-id: ${{ inputs.s3-access-key-id }}
           s3-secret-access-key: ${{ inputs.s3-secret-access-key }}
           s3-force-path-style: true
-      - run: gh release delete tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }} --cleanup-tag --yes
+      - run: gh release delete tauri-${{ inputs.app-id }}@${{ steps.setup.outputs.app-version }} --repo ${{ github.repository }} --cleanup-tag --yes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
