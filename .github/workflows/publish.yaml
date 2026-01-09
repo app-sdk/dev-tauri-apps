@@ -34,7 +34,7 @@ jobs:
       matrix:
         platform: [macos-latest, windows-latest]
     name: ${{ github.workflow }} ${{ inputs.app-id }}/${{ matrix.platform }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
     steps:
@@ -107,6 +107,7 @@ jobs:
           releaseBody: |
             **App ID**: `${{ inputs.app-id }}`
             **App Version**: `__VERSION__`
+          releaseCommitish: ${{ github.sha }}
           includeUpdaterJson: false
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
